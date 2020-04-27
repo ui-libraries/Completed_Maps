@@ -1,0 +1,552 @@
+<!doctype html>
+<html>
+
+<head>
+  <meta charset="utf-8">
+  <title>Deaths in ICE Custody: 2010-2020</title>
+  <meta name='viewport' content='initial-scale=1,maximum-scale=1,user-scalable=no' />
+
+  <!--for map and font styles-->
+  <link href='https://api.mapbox.com/mapbox-assembly/v0.8.0/assembly.min.css' rel='stylesheet'>
+  <link href='https://api.mapbox.com/mapbox.js/v3.0.1/mapbox.css' rel='stylesheet'>
+  <link href="https://fonts.googleapis.com/css?family=Cutive+Mono|Merriweather|Muli:400,700&display=swap" rel="stylesheet">
+
+  <!--for filter button icon support-->
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
+  <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.10.2/css/all.css">
+  <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.10.2/css/v4-shims.css">
+
+  <!-- for easy buttons -->
+  <link rel="stylesheet" href="css/easy-button.css">
+
+  <!-- for filter buttons -->
+  <link rel="stylesheet" href="css/leaflet-tag-filter-button.css">
+
+  <!-- for icon markers -->
+  <link rel="stylesheet" href="css/leaflet.extra-markers.min.css">
+
+  <!--for button-dependent map information window-->
+  <link rel='stylesheet' href='https://code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css'>
+
+  <style type="text/css">
+    body {
+      margin: 0px;
+      height: 100%;
+      width: 100%;
+    }
+
+    /* Add banner to header background */
+    header {
+      background-image: url('images/US_Immigration_and_Customs_Enforcement_arrest.jpg');
+      position: fixed;
+      width: 100%;
+      height: 100px;
+      background-color: #000000;
+      box-shadow: 0px 5px 5px black;
+      z-index: 800;
+    }
+
+    /* Set and style fonts for text in map */
+    h1 {
+      font-family: 'Muli', sans-serif;
+      font-size: 30px;
+      display: inline-block;
+      color: #f7f4ea;
+      margin-top: 0.5em;
+      margin-bottom: 0.0em;
+      margin-left: 0.5em;
+      margin-right: 0;
+      font-weight: normal;
+    }
+
+    h2 {
+      font-family: 'Merriweather', serif;
+      font-size: 13px;
+      display: inline-block;
+      color: #f7f4ea;
+      margin-top: 0.25em;
+      margin-bottom: 0.0em;
+      margin-left: 1.25em;
+      margin-right: 0;
+      font-weight: normal;
+    }
+
+    h3 {
+      font-family: 'Muli', sans-serif;
+      font-size: 14px;
+      display: inline-block;
+      color: black;
+      margin-top: 0.0em;
+      margin-bottom: 0.0em;
+      margin-left: 0.0em;
+      margin-right: 0;
+      font-weight: bold;
+    }
+
+    h4 {
+      font-family: 'Merriweather', serif;
+      font-size: 12px;
+      display: inline-block;
+      color: black;
+      font-weight: 100;
+    }
+
+    h6 {
+      font-family: 'Merriweather', serif;
+      font-size: 16px;
+      display: inline-block;
+      padding-top: 11px;
+      font-weight: normal;
+    }
+
+    /* Set map parameters */
+    #map {
+      position: fixed;
+      top: 100px;
+      bottom: 0px;
+      width: 100%;
+    }
+
+    #slider {
+      position: absolute;
+      height: 43px;
+      bottom: 0px;
+      left: 120px;
+      z-index: 1000;
+      background-color: white;
+      border-radius: 3px;
+      box-shadow: 0px 0px 0px 2px rgba(0, 0, 0, 0.3);
+    }
+
+    #temporal {
+      background-color: white;
+    }
+
+    /* Style button bar */
+    #myeasybar {
+      box-shadow: 0px 0px 0px 2px rgba(0, 0, 0, 0.3);
+      border: none;
+      border-radius: 3px;
+      z-index: 10;
+    }
+
+    /* Style buttons in bar */
+    #myeasybar button {
+      width: 35px;
+      height: 30px;
+      display: inline-block;
+      border: none;
+      border-radius: 2px;
+      box-shadow: 0px 0px 2px 0px rgba(0, 0, 0, 0.3);
+    }
+
+    .temporal-legend {
+      position: absolute;
+      left: 10px;
+      height: 41px;
+      width: 89px;
+      bottom: 1px;
+      z-index: 1000;
+      background-color: white;
+      padding-bottom: 10px;
+      padding-left: 5px;
+      border-radius: 3px;
+      box-shadow: 0px 0px 0px 2px rgba(0, 0, 0, 0.3);
+    }
+
+    .temporal-legend div {}
+
+    /* Set background color of layer control */
+    .leaflet-control-layers-expanded {
+      font-family: 'Muli', sans-serif;
+    }
+
+    .easy-button-button {
+      display: inline-block !important;
+    }
+
+    .tag-filter-tags-container {
+      left: 30px;
+    }
+
+  </style>
+</head>
+
+<body>
+  <header>
+    <h1>Deaths in ICE Custody: 2010-2020</h1><br>
+    <h2>Map by Kristiana Baez, University of Iowa, 2020</h2>
+  </header>
+
+  <!-- map -->
+  <div id="map"></div>
+
+  <!-- ui slider -->
+  <div id='slider' class='range w300 round py6 border--gray-light px12 leaflet-control'>
+    <input class="slider" />
+  </div>
+  <!-- end slider -->
+
+  <!-- button-dependent info window -->
+  <div id="dialog" title="Deaths in ICE Custody">
+    <h4>Between March 2010 and March 2020, 95 deaths have been documented for detainees
+      in ICE custody. For 2010 to 2018, these records were obtained from a
+      <a href="https://immigrantjustice.org/sites/default/files/content-type/research-item/documents/2018-06/Code%20Red-%20detention%20deaths%20report%20June%202018.pdf" style='color: blue;' target="_blank">report</a>
+      produced by the ACLU, Detention Watch Network, Human Rights Watch, and National
+      Immigrant Justice Center. For 2018 to 2020, records were acquired from the
+      <a href="https://www.aila.org/infonet/ice-releases-death-detainee-report" style='color: blue;' target="_blank">American Immigration Lawyers Association</a>.
+      According to these data, the Eloy Federal Contract Facility in Arizona, the
+      Houston Contract Detention Facility in Texas, and the combined ICE facilities
+      at Adelanto, California have been the sites of seven deaths each and 21 in
+      total during this period of record keeping. To interrogate this dataset further,
+      use the filter buttons at the top-left to organize by sex, country of birth,
+      facility state, and facility name.
+    </h4>
+  </div>
+  <!-- end button-dependent info window -->
+
+  <script src="https://code.jquery.com/jquery-3.1.1.min.js"></script>
+  <script src='https://api.mapbox.com/mapbox.js/v3.2.1/mapbox.js'></script>
+  <script src='https://api.mapbox.com/mapbox-assembly/v0.8.0/assembly.js'></script>
+  <script src="leaflet_awesome_markers.js"></script>
+  <script src="js/leaflet.extra-markers.min.js"></script>
+
+  <script src="js/easy-button.js"></script>
+  <script src="js/leaflet-tag-filter-button.js"></script>
+
+  <!-- for button-dependent map information window -->
+  <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
+
+  <script>
+    // center map on geographic center of the lower 48 and set initial zoom
+    var map = L.map('map').setView([38.0, -98.5795], 5);
+
+    // load map tiles and add them to the map
+    L.tileLayer('https://tile.thunderforest.com/neighbourhood/{z}/{x}/{y}.png?apikey=dd2dca516d114fd89c0b1403358cbfa8', {
+      attribution: '&copy; <a href="http://www.thunderforest.com/">Thunderforest</a>, &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+      apikey: '<dd2dca516d114fd89c0b1403358cbfa8>',
+      maxZoom: 16,
+      minZoom: 1,
+    }).addTo(map);
+
+    // add a scale bar
+    L.control.scale({
+      position: 'bottomright'
+    }).addTo(map);
+
+    $.getJSON("data/ICE_deaths.geojson").done(function(data) {
+      var info = processData(data);
+      createIcons(info.timestamps, data);
+      sequenceUI(info.timestamps);
+    });
+/*
+    $.getJSON("data/all_amenities.geojson")
+      .done(function(data) {
+        var info = processData(data);
+        createIcons(info.timestamps, data);
+        sequenceUI(info.timestamps);
+      })
+      .fail(function() {
+        alert("There has been a problem loading the data.")
+      });
+*/
+    // define processData function
+    function processData(data) {
+      var unsortedTimestamps = [];
+
+      for (var feature in data.features) {
+
+        var properties = data.features[feature].properties;
+
+        for (var attribute in properties) {
+
+          if (attribute == 'Year') {
+
+            if ($.inArray(properties[attribute], unsortedTimestamps) === -1) {
+              unsortedTimestamps.push(properties[attribute]);
+            }
+
+          }
+        }
+      }
+      return {
+        timestamps: unsortedTimestamps.sort(function(a, b) {
+          return a - b
+        })
+      }
+    } // end processData
+
+    function createIcons(timestamps, data) {
+
+      deaths = L.geoJson(data, {
+
+        pointToLayer: function(feature, ll) {
+
+          //define an empty array into which you can add tags for the filter buttons
+          var tags = [];
+
+          //push properties into the tags array for later referencing by the filter buttons
+          tags.push(feature.properties.Gender)
+          tags.push(feature.properties.Birth_Country);
+          tags.push(feature.properties.State);
+          tags.push(feature.properties.Facility);
+
+          return L.marker(ll, {
+            tags: tags,
+            icon: L.ExtraMarkers.icon({
+              icon: 'fas fa-notes-medical',
+              prefix: 'fa',
+              markerColor: 'red',
+              iconColor: 'white'
+            })
+          })
+        }
+      });
+
+      // M/F
+      L.control.tagFilterButton({
+        data: ['M','F'],
+        filterOnEveryClick: true,
+        icon: '<i class="fas fa-venus-mars" style="font-size:18px; padding-top: 6px;"></i>',
+      }).addTo(map);
+
+      // birth countries
+      L.control.tagFilterButton({
+        data: ['Angola','Antigua-Barbuda','Armenia','Bosnia','Brazil','British Virgin Islands','Cameroon','Canada','China','Cuba','Czech Republic','Dominican Republic','Ecuador','El Salvador','France','Gabon','Guatemala','Honduras','India','Iran','Jamaica','Laos','Liberia','Mexico','Mozambique','Nicaragua','Nigeria','Panama','Poland','Russia','United Kingdom','Vietnam'],
+        filterOnEveryClick: true,
+        icon: '<i class="fas fa-home" style="font-size:18px; padding-top: 6px;"></i>',
+      }).addTo(map);
+
+      // states
+      L.control.tagFilterButton({
+        data: ['AZ', 'CA', 'CO', 'FL', 'GA', 'IL', 'LA', 'MD', 'NC', 'NE', 'NJ', 'NM', 'NV', 'NY', 'OH', 'PA', 'PR', 'SC', 'TX', 'UT', 'VA', 'WA'],
+        filterOnEveryClick: true,
+        icon: '<i class="fas fa-map-marked" style="font-size:18px; padding-top: 6px;"></i>',
+      }).addTo(map);
+
+      // facilities
+      L.control.tagFilterButton({
+        data: ['ADELANTO CORRECTIONAL FACILITY', 'ADELANTO ICE PROCESSING CENTER', 'ALBANY COUNTY JAIL', 'ATLANTA CITY DETENTION CENTER', 'BAKER COUNTY DETENTION CENTER', 'BROADVIEW SERVICE STAGING', 'BROOKS COUNTY DETENTION CENTER', 'BUTNER FEDERAL CORRECTIONAL INSTITUTE', 'CIBOLA COUNTY CORRECTIONAL CENTER', 'CLINTON COUNTY CORRECTIONAL FACILITY', 'COLUMBIA CARE CENTER', 'DENVER CONTRACT DETENTION FACILITY', 'EL PASO COUNTY CRIMINAL JUSTICE CENTER', 'ELIZABETH CONTRACT DETENTION FACILITY', 'ELOY FEDERAL CONTRACT FACILITY', 'ESSEX COUNTY CORRECTIONAL FACILITY', 'FLORENCE SERVICE PROCESSING CENTER', 'GUAYNABO METROPOLITAN DETENTION CENTER', 'HALL COUNTY DEPARTMENT OF CORRECTIONS', 'HOUSTON CONTRACT DETENTION FACILITY', 'HUDSON COUNTY CORRECTIONAL FACILITY', 'IAH SECURE ADULT DETENTION CENTER', 'IMMIGRATION CENTERS OF AMERICA FARMVILLE', 'JENA/LA SALLE DETENTION FACILITY', 'JOE CORLEY DETENTION FACILITY', 'KARNES COUNTY RESIDENTIAL CENTER', 'KROME DETENTION CENTER', 'KROME NORTH SERVICE PROCESSING CENTER', 'LA PAZ COUNTY ADULT DETENTION FACILITY', 'LAS VEGAS HOLD ROOM', 'MCHENRY COUNTY ADULT CORRECTIONAL FACILITY', 'MIRA LOMA DETENTION CENTER', 'MONROE COUNTY DETENTION CENTER', 'NORTH GEORGIA DETENTION CENTER', 'NORTHEAST OHIO CORRECTIONAL CENTER', 'OAKDALE FEDERAL DETENTION CENTER', 'ORANGE COUNTY JAIL', 'ORLEANS PARISH PRISON', 'OTAY MESA DETENTION CENTER', 'OTERO COUNTY PROCESSING CENTER', 'PORT ISABEL DETENTION CENTER', 'PRAIRIELAND DETENTION CENTER', 'RICHWOOD CORRECTIONAL CENTER', 'RIO GRANDE DETENTION CENTER', 'ROLLING PLAINS DETENTION CENTER', 'SOUTH TEXAS DETENTION COMPLEX', 'STEWART DETENTION CENTER', 'TACOMA ICE PROCESSING CENTER (NORTHWEST DET CTR)', 'THEO LACY FACILITY', 'UTAH COUNTY JAIL', 'WEBER COUNTY JAIL', 'WORCESTER COUNTY DETENTION CENTER', 'YORK COUNTY PRISON'],
+        filterOnEveryClick: true,
+        icon: '<i class="fas fa-kaaba" style="font-size:18px; padding-top: 6px;"></i>',
+      }).addTo(map);
+
+      // create a button to take users to map 1
+      var map1button = L.easyButton({
+        id: 'map1button',
+        states: [{
+          stateName: 'change-map',
+          icon: '<strong>1</strong>',
+          title: 'Go to Map 1: Nationwide ICE Facilities',
+          onClick: function(e) {
+            window.location.href = 'index.html';
+          }
+        }]
+      });
+
+      // create an info button to describe the map and supporting data
+      var infoButton = L.easyButton({
+        id: 'infoButton',
+        position: 'topright',
+        states: [{
+          stateName: 'show-info',
+          icon: '<strong>?</strong>',
+          title: 'Tell me about this map',
+          onClick: function(btn, map) {
+            $("#dialog").dialog();
+          }
+        }]
+      });
+
+      // add the buttons to an array
+      var buttons = [map1button, infoButton];
+
+      // build a toolbar with them
+      L.easyBar(buttons, {
+        id: 'myeasybar',
+        position: 'topright',
+      }).addTo(map);
+
+      jQuery('.easy-button-button').click(function() {
+        target = jQuery('.easy-button-button').not(this);
+        target.parent().find('.tag-filter-tags-container').css({
+          'display': 'none',
+        });
+      });
+
+      //disable dragging of the map after clicking a filter button
+      jQuery('.easy-button-button').click(function() {
+        map.dragging.disable();
+      });
+
+      //enable dragging of the map after clicking on the map
+      map.on('click', function() {
+        map.dragging.enable();
+      });
+
+      // call updateIcons function
+      updateIcons(timestamps[0]);
+
+      // call retrieveIconInfo function
+      retrieveIconInfo(deaths);
+    }
+/*
+    // define createIcons function
+    function createIcons(timestamps, data) {
+
+      // define amenities icons
+      amenities = L.geoJson(data, {
+
+        pointToLayer: function(feature, ll) {
+
+          //define an empty array into which you can add tags for the filter buttons
+          var tags = [];
+
+          //push properties into the tags array for later referencing by the filter buttons
+          tags.push(feature.properties.Type);
+
+          return L.marker(ll, {
+            tags: tags,
+            icon: L.ExtraMarkers.icon({
+              icon: getIcon(feature.properties.Type),
+              prefix: 'fa',
+              markerColor: getColor(feature.properties.Type),
+              iconColor: 'white'
+            })
+          })
+
+        }
+
+      }).addTo(map);
+
+      // amenity type
+      L.control.tagFilterButton({
+        data: ["Automotive", "Beauty Parlors", "Drug Stores", "Garages", "Hotels", "Restaurants", "Service Stations", "Tailors", "Taverns", "Tourist Homes"],
+        filterOnEveryClick: true,
+        icon: '<i class="fas fa-filter" style="font-size:18px; padding-top: 6px;"></i>',
+      }).addTo(map);
+
+      jQuery('.easy-button-button').click(function() {
+        target = jQuery('.easy-button-button').not(this);
+        target.parent().find('.tag-filter-tags-container').css({
+          'display': 'none',
+        });
+      });
+
+      //disable dragging of the map after clicking a filter button
+      jQuery('.easy-button-button').click(function() {
+        map.dragging.disable();
+      });
+
+      //enable dragging of the map after clicking on the map
+      map.on('click', function() {
+        map.dragging.enable();
+      });
+
+      // call updateIcons function
+      updateIcons(timestamps[0]);
+
+      // call retrieveIconInfo function
+      retrieveIconInfo(amenities);
+
+    } // end createIcons function
+*/
+    // define updateIcons function
+    function updateIcons(timestamp) {
+
+      deaths.eachLayer(function(layer) {
+
+        var def = layer.feature.properties.Year;
+
+        if (def <= timestamp) {
+          map.addLayer(layer)
+        } else {
+          map.removeLayer(layer)
+        }
+
+      });
+
+    } // end updateIcons function
+
+    // add a UI slider
+    function sequenceUI(timestamps) {
+
+      // create Leaflet control for the slider
+      var sliderControl = L.control({
+        position: 'bottomleft',
+        follow: true
+      });
+
+      // add controls to the slider
+      sliderControl.onAdd = function(map) {
+
+        var controls = L.DomUtil.get("slider");
+
+        L.DomEvent.disableScrollPropagation(controls);
+        L.DomEvent.disableClickPropagation(controls);
+
+        return controls;
+
+      }
+
+      // add the control to the map
+      sliderControl.addTo(map);
+
+      $('.slider')
+        .attr({
+          'type': 'range',
+          'max': timestamps[timestamps.length - 1],
+          'min': timestamps[0],
+          'step': 1,
+          'value': String(timestamps[0])
+        })
+        .on('input change', function() {
+          updateIcons($(this).val().toString()); // update the icons to show according to their year
+          $(".temporal-legend").html('<h6>Year: ' + this.value + '</h6>');
+        });
+
+      createTemporalLegend(timestamps[0]);
+
+    }; // end sequenceUI function
+
+    // add a temporal legend in sync with the UI slider
+    function createTemporalLegend(startTimestamp) {
+
+      var temporalLegend = L.control({
+        position: 'bottomleft' // place the temporal legend at bottom left corner
+      });
+
+      temporalLegend.onAdd = function(map) {
+        var output = L.DomUtil.create("div", "temporal-legend");
+        $(output).html('<h6>Year: ' + startTimestamp + '</h6>');
+        return output;
+      }
+
+      temporalLegend.addTo(map);
+
+    }; // end createTemporalLegend function
+
+
+    // define retrieveIconInfo function
+    function retrieveIconInfo(deaths) {
+
+      // add content to popup window using the deaths Leaflet GeoJSON layer properties
+      deaths.eachLayer(function(layer) {
+        var props = layer.feature.properties;
+        layer.bindPopup("<h3 style=font-size:14px>" + props.Name + "<br>Age: " + props.Age + ", Sex: " + props.Gender + "<br>Homeland: " + props.Birth_Country + "</h3>" +
+          "<h4 style=font-size:12px>Died on " + props.Death_Date + "<br>in the custody of ICE at: " +
+          "<br>" + props.Facility + "</h4>" // add website
+        );
+        layer.on('mouseover', function(e) {
+          this.openPopup();
+        });
+        layer.on('mouseout', function(e) {
+          this.closePopup();
+        })
+      });
+
+    } // end retrieveIconInfo function
+  </script>
+</body>
+
+</html>

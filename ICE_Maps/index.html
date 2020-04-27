@@ -1,0 +1,451 @@
+<!doctype html>
+<html>
+
+<head>
+  <meta charset="utf-8">
+  <title>Nationwide ICE Facilities: 2020</title>
+  <meta name='viewport' content='initial-scale=1,maximum-scale=1,user-scalable=no' />
+
+  <!--for map and font styles-->
+  <link href='https://api.mapbox.com/mapbox-assembly/v0.8.0/assembly.min.css' rel='stylesheet'>
+  <link href='https://api.mapbox.com/mapbox.js/v3.0.1/mapbox.css' rel='stylesheet'>
+  <link href="https://fonts.googleapis.com/css?family=Cutive+Mono|Merriweather|Muli:400,700&display=swap" rel="stylesheet">
+
+  <!--for filter button icon support-->
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
+  <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.10.2/css/all.css">
+  <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.10.2/css/v4-shims.css">
+
+  <!--for button-dependent map information window-->
+  <link rel='stylesheet' href='https://code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css'>
+
+  <!-- for easy buttons -->
+  <link rel="stylesheet" href="css/easy-button.css">
+
+  <!-- for filter buttons -->
+  <link rel="stylesheet" href="css/leaflet-tag-filter-button.css">
+
+  <!-- for grouped layer control -->
+  <link rel="stylesheet" href="css/leaflet.groupedlayercontrol.css">
+
+  <style type="text/css">
+    body {
+      margin: 0px;
+      height: 100%;
+      width: 100%;
+    }
+
+    /* Add banner to header background */
+    header {
+      background-image: url('images/US_Immigration_and_Customs_Enforcement_arrest.jpg');
+      position: fixed;
+      width: 100%;
+      height: 100px;
+      background-color: #000000;
+      box-shadow: 0px 5px 5px black;
+      z-index: 800;
+    }
+
+    /* Set and style fonts for text in map */
+    h1 {
+      font-family: 'Muli', sans-serif;
+      font-size: 30px;
+      display: inline-block;
+      color: #f7f4ea;
+      margin-top: 0.5em;
+      margin-bottom: 0.0em;
+      margin-left: 0.5em;
+      margin-right: 0;
+      font-weight: normal;
+    }
+
+    h2 {
+      font-family: 'Merriweather', serif;
+      font-size: 13px;
+      display: inline-block;
+      color: #f7f4ea;
+      margin-top: 0.25em;
+      margin-bottom: 0.0em;
+      margin-left: 1.25em;
+      margin-right: 0;
+      font-weight: normal;
+    }
+
+    h3 {
+      font-family: 'Muli', sans-serif;
+      font-size: 14px;
+      display: inline-block;
+      color: black;
+      margin-top: 0.0em;
+      margin-bottom: 0.0em;
+      margin-left: 0.0em;
+      margin-right: 0;
+      font-weight: bold;
+    }
+
+    h4 {
+      font-family: 'Merriweather', serif;
+      font-size: 12px;
+      display: inline-block;
+      color: black;
+      font-weight: 100;
+    }
+
+    /* Set map parameters */
+    #map {
+      position: fixed;
+      top: 100px;
+      bottom: 0px;
+      width: 100%;
+    }
+
+    /* Style button bar */
+    #myeasybar {
+      box-shadow: 0px 0px 0px 2px rgba(0, 0, 0, 0.3);
+      border: none;
+      border-radius: 3px;
+      z-index: 10;
+    }
+
+    /* Style buttons in bar */
+    #myeasybar button {
+      width: 35px;
+      height: 30px;
+      display: inline-block;
+      border: none;
+      border-radius: 2px;
+      box-shadow: 0px 0px 2px 0px rgba(0, 0, 0, 0.3);
+    }
+
+    /* Set css styles for the legend */
+    .legend {
+      padding: 6px 10px;
+      font: 14px/16px Arial, Helvetica, sans-serif;
+      height: 175px;
+      width: 200px;
+      background: white;
+      background: rgba(255, 255, 255, 0.8);
+      box-shadow: 0 0 15px rgba(0, 0, 0, 0.2);
+      border-radius: 5px;
+    }
+
+    #legendTitle {
+      text-align: center;
+      margin-bottom: 15px;
+      font-variant: small-caps;
+    }
+
+    .symbolsContainer {
+      float: left;
+      margin-left: 75px;
+    }
+
+    .legendCircle {
+      border-radius: 50%;
+      border: 1px solid #537898;
+      background: rgba(113, 133, 152, .6);
+      display: inline-block;
+    }
+
+    .legendValue {
+      position: absolute;
+      right: 8px;
+    }
+
+    .easy-button-button {
+      display: inline-block !important;
+    }
+
+    .tag-filter-tags-container {
+      left: 30px;
+    }
+  </style>
+</head>
+
+<body>
+  <header>
+    <h1>Nationwide ICE Facilities: 2020</h1><br>
+    <h2>Map by Kristiana Baez, University of Iowa, 2020</h2>
+  </header>
+
+  <!-- A div for the map -->
+  <div id="map"></div>
+
+  <!-- button-dependent info window -->
+  <div id="dialog" title="Nationwide ICE Facilities">
+    <h4>Immigrant detention has surged since the mid-1990s. According to the
+      <a href="https://www.globaldetentionproject.org/countries/americas/united-states" style='color: blue;' target="_blank">Global Detention Project</a>,
+      The number of people detained increased from approximately 85,000 people in
+      1995 to 477,523 in 2012. Despite a brief decline, this number increased to
+      510,854 in 2019, as reported by <a href="https://www.ice.gov/sites/default/files/documents/Document/2019/eroReportFY2019.pdf" style='color: blue;' target="_blank">ICE</a>.
+      According to the most recent data obtained by the <a href="https://immigrantjustice.org/ice-detention-facilities-november-2017" style='color: blue;' target="_blank">National Immigrant Justice Center</a>,
+      there are 42,754 people detained in ICE custody on any given day. Using this
+      information, this map documents the average daily magnitude and geographic
+      dispersal of the world's largest immigrant detention system.</h4>
+  </div>
+  <!-- end button-dependent info window -->
+
+  <!-- load scripts -->
+  <script src='https://api.mapbox.com/mapbox-assembly/v0.24.0/assembly.js'></script>
+  <script src='https://api.mapbox.com/mapbox.js/v3.2.1/mapbox.js'></script>
+  <script src="https://code.jquery.com/jquery-3.1.1.min.js"></script>
+
+  <!-- for button-dependent map information window -->
+  <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
+
+  <!-- for easy buttons -->
+  <script src="js/easy-button.js"></script>
+
+  <!-- for filter buttons -->
+  <script src="js/leaflet-tag-filter-button.js"></script>
+
+  <!-- for grouped layer control -->
+  <script src="js/leaflet.groupedlayercontrol.js"></script>
+
+  <script type="text/javascript">
+    // JavaScript here...
+
+    // center map on geographic center of the lower 48 and set initial zoom
+    var map = L.map('map').setView([38.0, -98.5795], 5);
+
+    // load map tiles and add them to the map
+    L.tileLayer('https://tile.thunderforest.com/neighbourhood/{z}/{x}/{y}.png?apikey=dd2dca516d114fd89c0b1403358cbfa8', {
+      attribution: '&copy; <a href="http://www.thunderforest.com/">Thunderforest</a>, &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+      apikey: '<dd2dca516d114fd89c0b1403358cbfa8>',
+      maxZoom: 16,
+      minZoom: 1,
+    }).addTo(map);
+
+    // add a scale bar to bottomright corner
+    L.control.scale({
+      position: 'bottomleft'
+    }).addTo(map);
+
+    // load the ICE facilities GeoJSON file and add it to the map
+    $.getJSON("data/ICE_facilities.geojson") // get the file from its location in the folder structure
+      .done(function(data) { // then do the following with the data...
+        var info = processData(data); // send the data to the processData function below and define this with a variable of "info"
+        var facilities = L.geoJson(data, { // define a variable of "facilities" and style it...
+
+          pointToLayer: function(feature, latlng) { // using pointToLayer...
+
+            var tags = []; // declare an empty array for filter tags
+
+            tags.push(feature.properties.ICE_Status); // push ICE_Status from the GeoJSON feature properties to tags array
+            tags.push(feature.properties.MF); // push MF from the GeoJSON feature properties to tags array
+
+            return L.circleMarker(latlng, { // return circle markers from latitude and longitude coordinates
+              fillColor: '#708598', // set the fill color with a hexcode
+              color: '#537898', // set the border color
+              weight: 1, // set the weight of the border
+              fillOpacity: 0.6, // set the opacity of the fill color
+              tags: tags //define the tags with the tags array
+            }).on({
+
+              mouseover: function(e) { // when the user hovers over a circle marker with the mouse...
+                this.openPopup();
+                this.setStyle({
+                  color: 'yellow'
+                });
+              },
+              mouseout: function(e) { // when the user hovers off the circle marker...
+                this.closePopup();
+                this.setStyle({
+                  color: '#537898'
+                });
+
+              }
+
+            });
+          }
+
+        }).addTo(map);
+
+        // add filter button for ICE_Status
+        L.control.tagFilterButton({
+          data: ['ICE Dedicated Facility', 'ICE Non-Dedicated Facility'],
+          filterOnEveryClick: true,
+          icon: '<i class="fas fa-kaaba" style="font-size:18px; padding-top: 6px;"></i>', // select and style font awesome icon
+        }).addTo(map);
+
+        // add filter button for MF
+        L.control.tagFilterButton({
+          data: ['Female', 'Male', 'Female\/Male'],
+          filterOnEveryClick: true,
+          icon: '<i class="fas fa-venus-mars" style="font-size:18px; padding-top: 6px;"></i>', // select and style font awesome icon
+        }).addTo(map);
+
+        // create a button to take users to map 2
+        var map2button = L.easyButton({
+          id: 'map2button',
+          //position: 'topright',
+          states: [{
+            stateName: 'change-map',
+            icon: '<strong>2</strong>',
+            title: 'Go to Map 2: Deaths in ICE Custody',
+            onClick: function(e) {
+              window.location.href = 'index2.html';
+            }
+          }]
+        });
+
+        // create an info button to describe the map and supporting data
+        var infoButton = L.easyButton({
+          id: 'infoButton',
+          position: 'topright',
+          states: [{
+            stateName: 'show-info',
+            icon: '<strong>?</strong>',
+            title: 'Tell me about this map',
+            onClick: function(btn, map) {
+              $("#dialog").dialog();
+            }
+          }]
+        });
+
+        //infoButton.addTo(map); // add info button to the map
+
+        // add the buttons to an array
+        var buttons = [map2button, infoButton];
+
+        // build a toolbar with them
+        L.easyBar(buttons, {
+          id: 'myeasybar',
+          position: 'topright',
+        }).addTo(map);
+
+        jQuery('.easy-button-button').click(function() {
+          target = jQuery('.easy-button-button').not(this);
+          target.parent().find('.tag-filter-tags-container').css({
+            'display': 'none',
+          });
+        });
+
+        //disable dragging of the map after clicking a filter button
+        jQuery('.easy-button-button').click(function() {
+          map.dragging.disable();
+        });
+
+        //enable dragging of the map after clicking on the map
+        map.on('click', function() {
+          map.dragging.enable();
+        });
+
+        // send the facilities to the updatePropSymbols function defined below
+        updatePropSymbols(facilities);
+
+        // send the min and max values to the createLegend function defined below
+        createLegend(info.min, info.max);
+      });
+
+    function processData(data) {
+
+      var min = Infinity;
+      var max = -Infinity;
+
+      for (var feature in data.features) {
+
+        var properties = data.features[feature].properties;
+
+        for (var attribute in properties) {
+
+          if (attribute = 'ADP') { // if the attribute in the properties is 'ADP'...
+            if (properties[attribute] < min) {
+              min = properties[attribute]; // designate min as the lowest number
+            }
+            if (properties[attribute] > max) {
+              max = properties[attribute]; // designate max as the highest number
+            }
+          }
+
+        }
+
+      }
+
+      return { // return min and max
+        min: min,
+        max: max
+      }
+
+    }; // end processData
+
+    function updatePropSymbols(facilities) {
+      facilities.eachLayer(function(layer) {
+        var props = layer.feature.properties;
+        var radius = calcPropRadius(props['ADP']);
+        var popupContent = "<h3 style=font-size:14px>" + props['Name'] + "<br>" + props['City'] + ", " + props['State'] + "</h3>" +
+          "<h4 style=font-size:12px>" + props["ICE_Status"] + "<br>" + "Average Daily Population: " + String(props['ADP_2020']) + "<br>" + props['MF'] + "</h4>";
+        layer.setRadius(radius);
+        layer.bindPopup(popupContent, {
+          offset: new L.Point(0, -radius)
+        });
+      });
+    }; // end updatePropSymbols
+
+    function calcPropRadius(attributeValue) {
+      var scaleFactor = 2;
+      var area = attributeValue * scaleFactor;
+      return Math.sqrt(area / Math.PI) * 2;
+    }; // end calcPropRadius
+
+    function createLegend(min, max) {
+
+      if (min < 10){
+        min = 10;
+      }
+
+      function roundNumber(inNumber) {
+        return (Math.round(inNumber/10)*10);
+      }
+
+      var legend = L.control({position:'bottomright'});
+
+      legend.onAdd = function(map) {
+
+        var legendContainer = L.DomUtil.create("div", "legend");
+        var symbolsContainer = L.DomUtil.create("div", "symbolsContainer");
+        var classes = [roundNumber(min), roundNumber((max-min)/2), roundNumber(max)];
+        var legendCircle;
+        var lastRadius = 0;
+        var currentRadius;
+        var margin;
+
+        L.DomEvent.addListener(legendContainer, 'mousedown', function(e) {
+          L.DomEven.stopPropagation(e);
+        });
+
+        $(legendContainer).append("<h3 id=’legendTitle’>Avg Daily Population</h3>");
+
+        for (var i = 0; i <= classes.length-1; i++) {
+
+          legendCircle = L.DomUtil.create("div", "legendCircle");
+
+          currentRadius = calcPropRadius(classes[i]);
+
+          margin = -currentRadius - lastRadius - 2;
+
+          $(legendCircle).attr("style", "width: " + currentRadius*2 +
+                                "px; height: " + currentRadius*2 +
+                                "px; margin-left: " + margin + "px");
+
+          $(legendCircle).append("<span class='legendValue'>" + classes[i] + "</span>");
+
+          $(symbolsContainer).append(legendCircle);
+
+          lastRadius = currentRadius;
+
+        }
+
+        $(legendContainer).append(symbolsContainer);
+
+        return legendContainer;
+
+      };
+
+      legend.addTo(map);
+
+    }; // end createLegend
+  </script>
+</body>
+
+</html>
