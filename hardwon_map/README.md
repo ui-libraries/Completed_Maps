@@ -1,2 +1,2 @@
 # hardwon_map
-A [map](https://ui-libraries.github.io/hardwon_map/) of historical female representation in the Iowa House and Senate.
+A [map](https://ui-libraries.github.io/Studio_Map_Projects/hardwon_map/index.html) of historical female representation in the Iowa House and Senate.
