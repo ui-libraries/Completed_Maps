@@ -1,0 +1,426 @@
+<!doctype html>
+<html>
+
+<head>
+  <meta charset="utf-8">
+  <title>Hardwon Not Done</title>
+
+  <link href='https://api.mapbox.com/mapbox-assembly/v0.8.0/assembly.min.css' rel='stylesheet'>
+  <link href='https://api.mapbox.com/mapbox.js/v3.0.1/mapbox.css' rel='stylesheet'>
+  <link href="https://fonts.googleapis.com/css?family=Archivo+Black|Roboto:300&display=swap" rel="stylesheet">
+  <!--[if lte IE 8]>
+        <link rel="stylesheet" href="http://cdn.leafletjs.com/leaflet-0.6.2/leaflet.ie.css" />
+    <![endif]-->
+  <style type="text/css">
+    header {
+      background-image: url('images/IowaSuffrageMemorial_5.jpg');
+      position: fixed;
+      width: 100%;
+      height: 125px;
+      background-color: #000000;
+      box-shadow: 0px 5px 5px black;
+      z-index: 800;
+    }
+
+    h1 {
+      font-size: 30px;
+      font-family: 'Archivo Black', sans-serif;
+      display: inline-block;
+      color: white;
+      margin-left: 18px;
+      margin-right: 30px;
+      padding-top: 33px;
+      padding-bottom: 10px;
+    }
+
+    h3 {
+      font-size: 14px;
+      font-family: 'Roboto', sans-serif;
+      padding-top: 5px;
+    }
+
+    h4 {
+      font-size: 14px;
+      font-family: 'Roboto', sans-serif;
+      display: inline-block;
+      margin-right: 16px;
+      margin-left: 19px;
+      padding-bottom: 1px;
+      color: white;
+    }
+
+    h5 {
+      font-family: 'Archivo Black', sans-serif;
+    }
+
+    h6 {
+      font-family: 'Roboto', sans-serif;
+    }
+
+    body {
+      margin: 0px;
+      height: 100%;
+      width: 100%;
+    }
+
+    #map {
+      position: fixed;
+      top: 0px;
+      bottom: 0px;
+      width: 100%;
+      background: white;
+    }
+
+    #slider {
+      position: absolute;
+      height: 43px;
+      bottom: 0px;
+      left: 120px;
+      z-index: 1000;
+      background-color: #FFFFFF;
+      border-left: 1px solid;
+      border-right: 1px solid;
+      border-top: 1px solid;
+      border-bottom: 1px solid
+    }
+
+    #temporal {
+      background-color: #FFFFFF;
+      height: 43px
+    }
+
+    .legend {
+      background-color: #fff;
+      border-radius: 3px;
+      bottom: 30px;
+      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.10);
+      font: 12px/20px 'Helvetica Neue', Arial, Helvetica, sans-serif;
+      padding: 10px;
+      position: absolute;
+      right: 10px;
+      z-index: 1;
+      line-height: 18px;
+      color: #555;
+    }
+
+    .legend i {
+      width: 50px;
+      height: 18px;
+      float: left;
+      margin-right: 25px;
+      opacity: 0.7;
+    }
+
+    .leaflet-control-layers-expanded {
+      font-size: 14px;
+      font-family: 'Roboto', sans-serif;
+      font-weight: bold;
+    }
+
+    .leaflet-popup-content {
+      min-width: 350px;
+    }
+  </style>
+</head>
+
+<body>
+  <!-- Remove header
+  <header>
+    <h1>Representation of Women in the Iowa House and Senate: 1929-PRESENT</h1><br>
+    <h4>Map by <a target='blank' href='https://jebowe3.github.io/Map-Portfolio/'>Jay Bowen</a>, 2020 | Background image, <a target='blank' href='https://digital.lib.uiowa.edu/islandora/object/ui:suffrage_1540'>"Iowa Suffrage Memorial"</a> by Nellie Walker
+    </h4>
+  </header>
+-->
+
+  <div id="map"></div>
+  <!-- ui slider -->
+  <div id='slider' class='range w300 round py6 border--gray-light px12 leaflet-control'>
+    <input type='range' min="1929" max="2019" value="1929" step="2" class="slider" />
+  </div>
+  <!-- end slider -->
+  <!-- temporal legend -->
+  <div id='temporal' class='py6 px12 border border--gray-light round bottom left wmax200'>
+    <h3 class='txt-bold'>Year: <span></span></h3>
+  </div>
+  <!-- end temporal -->
+
+  <script src="https://unpkg.com/leaflet@1.6.0/dist/leaflet.js" integrity="sha512-gZwIG9x3wUXg2hdXF6+rVkLF/0Vi9U8D2Ntg4Ga5I5BZpVkVxlJWbSQtXPSiUTtC0TjtGOmxa1AJPuV0CPthew==" crossorigin=""></script>
+  <script src="https://code.jquery.com/jquery-3.1.1.min.js"></script>
+  <script src="https://d3js.org/d3.v4.min.js"></script>
+  <script type="text/javascript">
+    var map = L.map('map').setView([42.0667, -93.4], 8);
+
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+    	attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
+    	subdomains: 'abcd',
+    	maxZoom: 12,
+      minZoom: 8,
+    }).addTo(map);
+    /*
+        // Hydda basemap no longer works
+        L.tileLayer('https://{s}.tile.openstreetmap.se/hydda/full/{z}/{x}/{y}.png', {
+          attribution: 'Tiles courtesy of <a href="http://openstreetmap.se/" target="_blank">OpenStreetMap Sweden</a> &mdash; Map data &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+          maxZoom: 12,
+          minZoom: 8,
+        }).addTo(map);
+    */
+    // Add a function to style the counties by their count of female house members
+    function getColor(d) {
+      return d > 13.00 ? '#0f3034' :
+        d > 9.00 ? '#1C3F44' :
+        d > 5.00 ? '#30555A' :
+        d > 3.00 ? '#466A6F' :
+        d > 2.00 ? '#668488' :
+        d > 1.00 ? '#8BA0A2' :
+        d > 0.00 ? '#C4CED0' :
+        '#1C00ff00';
+    }
+
+    // Add a function to style the counties by their count of female senate members
+    function getColorSenate(d) {
+      return d > 3.00 ? '#466A6F' :
+        d > 2.00 ? '#668488' :
+        d > 1.00 ? '#8BA0A2' :
+        d > 0.00 ? '#C4CED0' :
+        '#1C00ff00';
+    }
+
+    // load the data asynchronously
+    d3.queue()
+      .defer(d3.json, 'data/House_Women_Cumulative.geojson') // the running total of women in the Iowa House layer
+      .defer(d3.json, 'data/Senate_Women_Cumulative.geojson') // the running total of women in the Iowa Senate layer
+      .await(drawMap); // load the layers after the map loads
+
+    // define drawMap function
+    function drawMap(err, houseCounties, senateCounties) {
+
+      // give the layer some default properties
+      var houseWomen = L.geoJson(houseCounties, {
+        style: function(feature) {
+          return {
+            stroke: 1,
+            color: 'grey',
+            strokeOpacity: 1.0,
+            weight: 1.0,
+            fillOpacity: 0.7
+          }
+        },
+      }).addTo(map); // add house layer to the map
+
+      // give the layer some default properties
+      var senateWomen = L.geoJson(senateCounties, {
+        style: function(feature) {
+          return {
+            stroke: 1,
+            color: 'grey',
+            strokeOpacity: 1.0,
+            weight: 1.0,
+            fillOpacity: 0.7
+          }
+        }
+      });
+
+      // define currentYear as the dynamic slider entry
+      var currentYear = $('.slider').val();
+
+      sequenceUI(houseWomen, senateWomen); // calls the function to make the time slider
+      createTemporalLegend(currentYear); // produces temporal legend upon map loading
+      updateCounties(houseWomen, senateWomen, currentYear); // calls the function that updates the counties choropleth
+
+      // define layers
+      var baselayers = {
+        "Iowa House": houseWomen,
+        "Iowa Senate": senateWomen,
+      };
+      /*
+              // define an overlay
+              var overlays = {
+                "Iowa House": houseWomen,
+                "Iowa Senate": senateWomen,
+              };
+      */
+      // send the layer to the layer control
+      L.control.layers(baselayers, null, {
+        collapsed: false,
+      }).addTo(map);
+
+      map.fitBounds(houseWomen.getBounds());
+
+      var legend = L.control({
+        position: 'bottomright'
+      });
+
+      legend.onAdd = function(map) {
+
+        var div = L.DomUtil.create('div', 'info legend'),
+          grades = [0.00, 1.00, 2.00, 3.00, 5.00, 9.00, 13.00],
+          labels = ["<h6 style='font-size:14px; font-weight:bold'>Total Representatives</h6>"];
+
+        // loop through our density intervals and generate a label with a colored square for each interval
+        for (var i = 0; i < grades.length; i++) {
+          div.innerHTML +=
+            labels.push('<i style="background:' + getColor(grades[i] + 1) + '"></i> ' +
+              grades[i] + (grades[i + 1] ? '&ndash;' + grades[i + 1] : '+'));
+        }
+        div.innerHTML = labels.join('<br>');
+        return div;
+      };
+
+      legend.addTo(map);
+
+    }; // end drawMap function
+
+    // add a temporal legend in sync with the UI slider
+    function createTemporalLegend(currentYear) {
+
+      var temporalLegend = L.control({
+        position: 'bottomleft' // place the temporal legend at bottom left corner
+      });
+
+      // when added to the map
+      temporalLegend.onAdd = function(map) {
+
+        var div = L.DomUtil.get("temporal"); // get the style settings
+
+        // disable the mouse events
+        L.DomEvent.disableScrollPropagation(div);
+        L.DomEvent.disableClickPropagation(div);
+
+        return div; // return the style settings
+
+      }
+
+      $('#temporal span').html(currentYear); // change grade value to that currently selected by UI slider
+
+      temporalLegend.addTo(map); // add the temporal legend to the map
+
+    }; // end createTemporalLegend function
+
+    // add a UI slider
+    function sequenceUI(houseWomen, senateWomen) {
+
+      // create Leaflet control for the slider
+      var sliderControl = L.control({
+        position: 'bottomleft'
+      });
+
+      // add controls to the slider
+      sliderControl.onAdd = function(map) {
+
+        var controls = L.DomUtil.get("slider");
+
+        L.DomEvent.disableScrollPropagation(controls);
+        L.DomEvent.disableClickPropagation(controls);
+
+        return controls;
+
+      }
+
+      // add the control to the map
+      sliderControl.addTo(map);
+
+      $('.slider') // call the slider
+        .on('input change', function() { // when the slider is moved...
+          var currentYear = $(this).val(); // identifies the year selected
+          createTemporalLegend(currentYear);
+          updateCounties(houseWomen, senateWomen, currentYear);
+        });
+
+    }; // End sequenceUI function
+
+    // update the counties based on count of representation
+    function updateCounties(houseWomen, senateWomen, currentYear) {
+
+      houseWomen.eachLayer(function(layer) {
+
+        var props = layer.feature.properties
+
+        layer.bindPopup("<h5 style='font-size:18px'>" + props.COUNTY + " County, " + currentYear + "</h5>" +
+          "<h6 style='font-size:14px'>Total House Representatives: " + props[currentYear + '_RUNNING'] + "</h6>" +
+          "<h6 style='font-size:12px'>" + props[currentYear + '_REPS_RUNNING'] + "</h6>"
+        );
+        layer.on('click', function(e) {
+          this.openPopup();
+        });
+
+        layer.setStyle({
+          fillColor: getColor(props[currentYear + '_RUNNING'])
+        });
+
+        layer.on({
+          mouseover: function(e) {
+            var layer = e.target;
+            layer.setStyle({
+              fillColor: getColor(props[currentYear + '_RUNNING']),
+              stroke: 1,
+              color: 'grey',
+              strokeOpacity: 1.0,
+              weight: 3.0,
+              fillOpacity: 1.0
+            });
+          },
+
+          mouseout: function(e) {
+            var layer = e.target;
+            layer.setStyle({
+              fillColor: getColor(props[currentYear + '_RUNNING']),
+              stroke: 1,
+              color: 'grey',
+              strokeOpacity: 1.0,
+              weight: 1.0,
+              fillOpacity: 0.7
+            });
+          },
+        });
+
+      });
+
+      senateWomen.eachLayer(function(layer) {
+
+        var props = layer.feature.properties
+
+        layer.bindPopup("<h5 style='font-size:18px'>" + props.COUNTY + " County, " + currentYear + "</h5>" +
+          "<h6 style='font-size:14px'>Total House Representatives: " + props[currentYear + '_RUNNING'] + "</h6>" +
+          "<h6 style='font-size:12px'>" + props[currentYear + '_REPS_RUNNING'] + "</h6>"
+        );
+        layer.on('click', function(e) {
+          this.openPopup();
+        });
+
+        layer.setStyle({
+          fillColor: getColorSenate(props[currentYear + '_RUNNING'])
+        });
+
+        layer.on({
+          mouseover: function(e) {
+            var layer = e.target;
+            layer.setStyle({
+              fillColor: getColor(props[currentYear + '_RUNNING']),
+              stroke: 1,
+              color: 'grey',
+              strokeOpacity: 1.0,
+              weight: 3.0,
+              fillOpacity: 1.0
+            });
+          },
+
+          mouseout: function(e) {
+            var layer = e.target;
+            layer.setStyle({
+              fillColor: getColor(props[currentYear + '_RUNNING']),
+              stroke: 1,
+              color: 'grey',
+              strokeOpacity: 1.0,
+              weight: 1.0,
+              fillOpacity: 0.7
+            });
+          },
+        });
+
+      });
+
+    }; // end updateCounties() function
+  </script>
+</body>
+
+</html>
