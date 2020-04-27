@@ -1,2 +1,2 @@
 # Completed_Maps
-A repository of finished map projects
+A repository of Studio map projects
