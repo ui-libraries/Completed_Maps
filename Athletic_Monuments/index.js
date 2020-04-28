@@ -28,25 +28,25 @@ function onEachFeature(feature, layer) {
     var toprightOptions = {
       maxWidth: 'auto',
       maxHeight: 320, // set maximum height of the popup content to 320 pixels
-      offset: [175, 0], // set initial position to the top-right of clicked point
+      offset: [175, 0], // set position to the top-right of clicked point
     }
 
     var bottomrightOptions = {
       maxWidth: 'auto',
       maxHeight: 320, // set maximum height of the popup content to 320 pixels
-      offset: [175, 400], // set initial position to the top-right of clicked point
+      offset: [175, 400], // set position to the bottom-right of clicked point
     }
 
     var topleftOptions = {
       maxWidth: 'auto',
       maxHeight: 320, // set maximum height of the popup content to 320 pixels
-      offset: [-175, 0], // set initial position to the top-right of clicked point
+      offset: [-175, 0], // set position to the top-left of clicked point
     }
 
     var bottomleftOptions = {
       maxWidth: 'auto',
       maxHeight: 320, // set maximum height of the popup content to 320 pixels
-      offset: [-175, 400], // set initial position to the top-right of clicked point
+      offset: [-175, 400], // set position to the bottom-left of clicked point
     }
 
     feature.layer = layer
