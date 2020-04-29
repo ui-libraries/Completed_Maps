@@ -1,0 +1,395 @@
+<!doctype html>
+<html>
+
+<head>
+  <meta charset="utf-8">
+  <title>Mapping Segregation in Iowa City</title>
+  <link rel="icon" type="image/jpg" href="images/icon.jpg" />
+  <meta name='viewport' content='initial-scale=1,maximum-scale=1,user-scalable=no' />
+
+  <link href='https://api.mapbox.com/mapbox-assembly/v0.24.0/assembly.min.css' rel='stylesheet'>
+  <link href='https://api.mapbox.com/mapbox.js/v3.2.1/mapbox.css' rel='stylesheet' />
+  <link href="https://fonts.googleapis.com/css?family=Rubik&display=swap" rel="stylesheet">
+
+  <!--for filter button icon support-->
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
+  <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.10.2/css/all.css">
+  <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.10.2/css/v4-shims.css">
+
+  <!-- for easy buttons -->
+  <link rel="stylesheet" href="css/easy-button.css">
+
+  <!-- for filter buttons -->
+  <link rel="stylesheet" href="css/leaflet-tag-filter-button.css">
+
+  <style type="text/css">
+    h1 {
+      font-size: 30px;
+      font-family: 'Rubik', sans-serif;
+      display: inline-block;
+      color: white;
+      margin-left: 18px;
+      margin-right: 30px;
+      padding-top: 20px;
+      padding-bottom: 10px;
+    }
+
+    h2 {
+      font-size: 14px;
+      font-family: 'Rubik', sans-serif;
+      padding-bottom: 0px;
+      padding-top: 0px;
+    }
+
+    h3 {
+      font-size: 12px;
+      font-family: 'Rubik', sans-serif;
+      padding-top: 0px;
+    }
+
+    h4 {
+      font-size: 14px;
+      font-family: 'Rubik', sans-serif;
+      display: inline-block;
+      margin-right: 16px;
+      margin-left: 19px;
+      padding-bottom: 1px;
+      color: white;
+    }
+
+    h5 {
+      font-size: 14px;
+      font-family: 'Rubik', sans-serif;
+      padding-bottom: 0px;
+      padding-top: 4px;
+    }
+
+    hr {
+      display: block;
+      margin-top: 0.5em;
+      margin-bottom: 0.5em;
+      margin-left: auto;
+      margin-right: auto;
+      border-style: inset;
+      border-width: 1px;
+    }
+
+    body {
+      margin: 0px;
+      height: 100%;
+      width: 100%;
+    }
+
+    /* Set map parameters */
+    #map {
+      position: fixed;
+      top: 0px;
+      bottom: 0px;
+      width: 100%;
+    }
+
+    .leaflet-bar {
+      background-color: rgba(255, 255, 255, 0.7);
+    }
+
+    .leaflet-control-layers-expanded {
+      font-family: 'Rubik', sans-serif;
+      font-size: 12px;
+      background-color: rgba(255, 255, 255, 0.7);
+    }
+
+    .legend {
+      background-color: rgba(255, 255, 255, 0.7);
+      border-radius: 3px;
+      bottom: 30px;
+      width: 203px;
+      box-shadow: 0px 0px 0px 2px rgba(0, 0, 0, 0.3);
+      font: 12px/20px 'Rubik', 'Rubik', 'Rubik', sans-serif;
+      padding: 10px;
+      position: absolute;
+      right: 10px;
+      z-index: 1;
+      line-height: 18px;
+      color: #555;
+    }
+
+    .legend i {
+      width: 10px;
+      height: 10px;
+      float: left;
+      margin-right: 5px;
+      margin-top: 4px;
+      opacity: 0.7;
+    }
+
+    .easy-button-button {
+      display: inline-block !important;
+    }
+
+    .tag-filter-tags-container {
+      left: 30px;
+    }
+  </style>
+</head>
+
+<body>
+  <div id="map"></div>
+
+  <!-- load scripts -->
+  <script src='https://api.mapbox.com/mapbox-assembly/v0.24.0/assembly.js'></script>
+  <script src='https://api.mapbox.com/mapbox.js/v3.2.1/mapbox.js'></script>
+  <script src="https://d3js.org/d3.v4.min.js"></script>
+  <script src="https://code.jquery.com/jquery-3.1.1.min.js"></script>
+
+  <!-- for easy buttons -->
+  <script src="js/easy-button.js"></script>
+
+  <!-- for filter buttons -->
+  <script src="js/leaflet-tag-filter-button.js"></script>
+
+  <script type="text/javascript">
+    // Define bounding coordinates to prevent dragging too far from Iowa City
+    var southWest = L.latLng(41.0, -92.0),
+        northEast = L.latLng(42.0, -91.0),
+        bounds = L.latLngBounds(southWest, northEast);
+
+    // Initialize the map
+    var map = L.map('map')
+      .setView([41.656620, -91.531674], 15)
+      .setMaxBounds(bounds);
+
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+  	  attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
+  	  subdomains: 'abcd',
+    	maxZoom: 18,
+      minZoom: 12,
+    }).addTo(map);
+
+    // add a scale bar
+    L.control.scale().addTo(map);
+
+    // Add functions to style the polygons by values
+    function getColorPoc(d) {
+      return d === 1 ? 'black' :
+        d === 2 ? '#8B4513' :
+        'rgba(0,0,0,0.0)';
+    };
+
+    function getColorRestrictive(d) {
+      return d === 1 ? 'red' :
+        d === 2 ? 'orange' :
+        'rgba(0,0,0,0.0)';
+    };
+
+    // load the data asynchronously
+    // Parcels for persons of color and restrictive covenants
+    d3.queue()
+      .defer(d3.json, 'data/POC_Parcels.geojson')
+      .defer(d3.json, 'data/Restrictive_Covenant_Parcels.geojson')
+      .await(drawMap); // load the data asynchronously
+
+    // define drawMap function
+    function drawMap(err, poc, restrictive) {
+
+      var pocParcels = L.geoJson(poc, {
+        // style the layer
+        style: function(feature) {
+
+          return {
+              stroke: 0.25,
+              color: getColorPoc(feature.properties.B_occ),
+              strokeOpacity: 1,
+              weight: 0.25,
+              fillColor: getColorPoc(feature.properties.B_occ),
+              fillOpacity: 0.5,
+            };
+        },
+
+        onEachFeature: function(feature, layer) {
+
+          if (feature.properties.B_occ == 1) {
+            var household = 'AFRICAN-AMERICAN HOUSEHOLD'
+          } else {
+            var household = 'LATINX HOUSEHOLD'
+          }
+
+          // bind a popup window
+          layer.bindPopup("<h2 style='font-size:14px'><b>" + household + "</b></h2><hr><h3 style='font-size:12px'>CURRENT ADDRESS" + '<br><b>' + feature.properties.PropertyAd + '</b><hr>SUBDIVISION' + '<br><b>'+ feature.properties.SubDivisio + '</b></h3>');
+          // change layer style on mouseover
+          layer.on("mouseover", function(e) {
+            layer.setStyle({
+              stroke: 0.25,
+              color: '#4169E1',
+              strokeOpacity: 1,
+              weight: 0.25,
+              fillColor: '#4169E1',
+              fillOpacity: 0.5,
+            }).bringToFront();
+          });
+          // reset style on mouseout
+          layer.on("mouseout", function(e) {
+            pocParcels.resetStyle(e.target);
+          });
+        }
+      }).addTo(map); // end pocParcels
+
+      var restrictiveParcels = L.geoJson(restrictive, {
+
+        // style the layer
+        style: function(feature) {
+
+          var tags = []; // declare an empty array for filter tags
+
+          tags.push(feature.properties.Decade);
+
+          return {
+            stroke: 0.25,
+            color: 'white',
+            strokeOpacity: 1,
+            weight: 0.25,
+            fillColor: getColorRestrictive(feature.properties.REST),
+            fillOpacity: 0.5,
+            tags: tags,
+          };
+        },
+
+        onEachFeature: function(feature, layer) {
+
+          if (feature.properties.PropertyAd == null) {
+            var address = 'N/A'
+          } else {
+            var address = feature.properties.PropertyAd
+          }
+
+          if (feature.properties.REST == 1) {
+            var restriction = 'SUBDIVISION RESTRICTION'
+          } else {
+            var restriction = 'PARCEL RESTRICTION'
+          }
+
+          // bind a popup window
+          layer.bindPopup("<h2 style='font-size:14px'><b>" + restriction + "</b></h2><hr><h3 style='font-size:12px'>CURRENT ADDRESS" + '<br><b>' + address + '</b><hr>SUBDIVISION' + '<br><b>' + feature.properties.SubDivisio +
+            '</b><hr>' + restriction + ' FILED: ' + '<br><b>'+ feature.properties.REST_yr + '</b></h3>');
+          // change layer style on mouseover
+          layer.on("mouseover", function(e) {
+            layer.setStyle({
+              stroke: 0.25,
+              color: '#4169E1',
+              strokeOpacity: 1,
+              weight: 0.25,
+              fillColor: '#4169E1',
+              fillOpacity: 0.5,
+            }).bringToFront();
+          });
+          // reset style on mouseout
+          layer.on("mouseout", function(e) {
+            restrictiveParcels.resetStyle(e.target);
+          });
+
+        }
+
+      }).addTo(map); // end restrictiveParcels
+
+      // Decades
+      L.control.tagFilterButton({
+        data: ['1920s','1930s','1940s'],
+        filterOnEveryClick: true,
+        icon: '<i class="fas fa-hourglass-half" style="font-size:18px; padding-top: 6px;"></i>',
+      }).addTo(map);
+
+      jQuery('.easy-button-button').click(function() {
+        target = jQuery('.easy-button-button').not(this);
+        target.parent().find('.tag-filter-tags-container').css({
+          'display': 'none',
+        });
+      });
+
+      //disable dragging of the map after clicking a filter button
+      jQuery('.easy-button-button').click(function() {
+        map.dragging.disable();
+      });
+
+      //enable dragging of the map after clicking on the map
+      map.on('click', function() {
+        map.dragging.enable();
+      });
+
+      var overlays = {
+        "Non-White Households" : pocParcels,
+        "Restricted Lots": restrictiveParcels,
+      };
+
+      // all done with the layers, add them to layer control
+      L.control.layers(null, overlays, {
+        collapsed: false,
+      }).addTo(map);
+
+      // create legend for the family origins
+      var parcelLegend = L.control({
+        position: 'bottomright'
+      });
+
+      // add content to the legend
+      parcelLegend.onAdd = function(map) {
+
+        var div = L.DomUtil.create('div', 'info legend'),
+
+          nums = [1, 2],
+          pocs = ['African-American Household', 'Latinx Household'],
+          restrictions = ['Subdivision Restriction', 'Parcel Restriction'],
+          pocLabels = ["<h3 style='font-size:14px; font-weight:bold'>Non-White Households</h3>"];
+          resLabels = ["<h3 style='font-size:14px; font-weight:bold'>Restrictive Covenants</h3>"];
+
+        // loop through categories and generate a label with a colored square for each
+        div.innerHTML +=
+          "<b style='font-size:14px'>Non-White Households</b>" + '<br><br>' + '<i style="background:' + getColorPoc(1) + '"></i> ' +
+            'African-American Households' + '<br>' + '<i style="background:' + getColorPoc(2) + '"></i> ' + 'Latinx Households' +
+            '<br><br>' + "<b style='font-size:14px'>Restricted Lots</b>" + '<br><br>' + '<i style="background:' + getColorRestrictive(1) + '"></i> ' +
+              'Subdivision Restriction' + '<br>' + '<i style="background:' + getColorRestrictive(2) + '"></i> ' + 'Parcel Restriction';
+
+        //div.innerHTML = pocLabels.join('<br>');
+
+        return div;
+      };
+
+      // add this legend to the map, because this legend is on by default
+      parcelLegend.addTo(map);
+/*
+      var baseMaps = {
+        "Iowa Counties": iowaCounties,
+      }
+
+      // designate the layers as grouped overlays
+      var groupedOverlays = {
+        "Layers": { // give each layer a name
+          "OMB Rural Areas": iowaOmbRural,
+          "US Census Rural Areas": USCensusRural,
+          "OMB Urban Areas": iowaOmbUrban,
+          "US Census Urban Areas": USCensusUrban,
+        }
+      };
+
+      // define options for the layer controls
+      var options = {
+        exclusiveGroups: ["Layers"],
+        groupCheckboxes: true,
+        collapsed: false,
+      };
+
+      // define the layer controls and send the grouped layers to it
+      var layerControl = L.control.groupedLayers(null, groupedOverlays, options);
+
+      // add the layer controls to the map
+      map.addControl(layerControl);
+      /*
+            // all done with the layers, add them to layer control
+            L.control.layers(null, baselayers, {
+              collapsed: false,
+            }).addTo(map);
+      */
+
+    }; // end drawMap function
+  </script>
+</body>
+
+</html>
